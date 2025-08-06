@@ -1,39 +1,34 @@
-import axios from 'axios';
-import authHeader from './auth-header';
+// src/services/patients.service.js
+import api from './http-common.js'; // C'est l'instance d'Axios avec l'intercepteur
 
-const API_URL = 'http://localhost:8080/api/patients/';
+// Note: Plus besoin d'importer 'authHeader', ni 'axios' ni 'API_URL' si vous utilisez baseURL
+// const API_URL = 'http://localhost:8080/api/';
 
 class PatientService {
-    // Récupérer tous les patients
-    getAllPatients() {
-        return axios.get(API_URL, { headers: authHeader() });
+    // Nouvelle méthode pour gérer la pagination et la recherche
+    getPatients(page = 0, size = 10, searchTerm = '') {
+        // L'intercepteur gère l'en-tête, donc il suffit de passer les paramètres
+        return api.get('patients', {
+            params: { page, size, search: searchTerm }
+        });
     }
 
-    // Récupérer un patient par ID
-    getPatientById(id) {
-        return axios.get(API_URL + id, { headers: authHeader() });
-    }
-
-    // Créer un nouveau patient
     createPatient(patientData) {
-        return axios.post(API_URL, patientData, { headers: authHeader() });
+        // L'intercepteur gère l'en-tête, il suffit d'envoyer les données
+        return api.post('patients', patientData);
     }
 
-    // Mettre à jour un patient existant
+    getPatientById(id) {
+        return api.get(`patients/${id}`);
+    }
+
     updatePatient(id, patientData) {
-        return axios.put(API_URL + id, patientData, { headers: authHeader() });
+        return api.put(`patients/${id}`, patientData);
     }
 
-    // Supprimer un patient
     deletePatient(id) {
-        return axios.delete(API_URL + id, { headers: authHeader() });
+        return api.delete(`patients/${id}`);
     }
-
-    // Méthode de recherche par nom/prénom (si vous en avez une dans le backend)
-    // Assurez-vous d'avoir un endpoint correspondant dans votre PatientController
-    // findPatientsByName(name) {
-    //     return axios.get(API_URL + 'search?name=' + name, { headers: authHeader() });
-    // }
 }
 
 export default new PatientService();
