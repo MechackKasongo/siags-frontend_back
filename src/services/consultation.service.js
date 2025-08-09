@@ -2,7 +2,7 @@
 import api from './http-common.js';
 import authHeader from './auth-header';
 
-const API_URL = 'http://localhost:8080/api/';
+const API_URL = 'http://localhost:8080/api/v1/';
 
 class ConsultationService {
     getConsultations() {

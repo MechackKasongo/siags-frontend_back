@@ -1,20 +1,17 @@
 // src/services/patients.service.js
-import api from './http-common.js'; // C'est l'instance d'Axios avec l'intercepteur
 
-// Note: Plus besoin d'importer 'authHeader', ni 'axios' ni 'API_URL' si vous utilisez baseURL
-// const API_URL = 'http://localhost:8080/api/';
+import api from './http-common.js'; // Use the 'api' instance that has the interceptor.
+const API_URL = 'http://localhost:8080/api/v1/';
 
 class PatientService {
-    // Nouvelle méthode pour gérer la pagination et la recherche
+    // The interceptor automatically handles the 'Authorization' header, so we just need to provide the endpoint.
     getPatients(page = 0, size = 10, searchTerm = '') {
-        // L'intercepteur gère l'en-tête, donc il suffit de passer les paramètres
         return api.get('patients', {
             params: { page, size, search: searchTerm }
         });
     }
 
     createPatient(patientData) {
-        // L'intercepteur gère l'en-tête, il suffit d'envoyer les données
         return api.post('patients', patientData);
     }
 

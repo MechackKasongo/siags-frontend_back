@@ -1,82 +1,90 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ReportService from '../../services/report.service';
+import ApiStateHandler from '../../components/ApiStateHandler.jsx';
 
 const ReportsPage = () => {
-    const [totalPatients, setTotalPatients] = useState(0);
-    const [patientGenderDistribution, setPatientGenderDistribution] = useState([]);
-    const [totalAdmissions, setTotalAdmissions] = useState(0);
-    const [admissionsByDepartment, setAdmissionsByDepartment] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchReports = async () => {
-            try {
-                const [
-                    totalPatientsRes,
-                    genderDistRes,
-                    totalAdmissionsRes,
-                    admissionsByDeptRes,
-                ] = await Promise.all([
-                    ReportService.getTotalPatientsCount(),
-                    ReportService.getPatientGenderDistribution(),
-                    ReportService.getTotalAdmissionsCount(),
-                    ReportService.getAdmissionCountByDepartment(),
-                ]);
+    /**
+     * @description Fetches all report data concurrently and returns a single object.
+     * @returns {Promise<object>} A promise that resolves to an object containing all report data.
+     */
+    const fetchReports = async () => {
+        const [
+            totalPatientsRes,
+            genderDistRes,
+            totalAdmissionsRes,
+            admissionsByDeptRes,
+        ] = await Promise.all([
+            ReportService.getTotalPatientsCount(),
+            ReportService.getPatientGenderDistribution(),
+            ReportService.getTotalAdmissionsCount(),
+            ReportService.getAdmissionCountByDepartment(),
+        ]);
 
-                setTotalPatients(totalPatientsRes.data);
-                setPatientGenderDistribution(genderDistRes.data);
-                setTotalAdmissions(totalAdmissionsRes.data);
-                setAdmissionsByDepartment(admissionsByDeptRes.data);
-            } catch (err) {
-                console.error('Erreur lors de la récupération des rapports:', err);
-                setError('Impossible de charger les rapports.');
-            } finally {
-                setLoading(false);
-            }
+        return {
+            totalPatients: totalPatientsRes.data,
+            patientGenderDistribution: genderDistRes.data,
+            totalAdmissions: totalAdmissionsRes.data,
+            admissionsByDepartment: admissionsByDeptRes.data,
         };
+    };
 
-        fetchReports();
-    }, []);
+    /**
+     * @description Renders the report content once the data is successfully loaded.
+     * @param {object} data The report data returned from the API call.
+     * @param {number} data.totalPatients The total number of patients.
+     * @param {Array<object>} data.patientGenderDistribution Distribution of patients by gender.
+     * @param {number} data.totalAdmissions The total number of admissions.
+     * @param {Array<object>} data.admissionsByDepartment Admissions count by department.
+     * @returns {JSX.Element} The JSX for the report page.
+     */
+    const renderReports = ({ totalPatients, patientGenderDistribution, totalAdmissions, admissionsByDepartment }) => {
+        return (
+            <div className="p-8 bg-gray-50 min-h-screen font-sans">
+                <div className="container mx-auto">
+                    <h2 className="text-4xl font-bold text-gray-800 mb-8 text-center">Statistiques et Rapports</h2>
 
-    if (loading) {
-        return <div>Chargement des statistiques...</div>;
-    }
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Report Card: Patients */}
+                        <div className="bg-white p-6 rounded-lg shadow-xl border-t-4 border-indigo-500">
+                            <h3 className="text-2xl font-semibold text-gray-700 mb-4">Patients</h3>
+                            <p className="text-lg text-gray-600 mb-2">Nombre total de patients : <strong className="text-indigo-600">{totalPatients}</strong></p>
+                            <h4 className="text-md font-medium text-gray-500 mt-4">Répartition par sexe :</h4>
+                            <ul className="list-disc list-inside mt-2 text-gray-600">
+                                {patientGenderDistribution.map((item, index) => (
+                                    <li key={index}>
+                                        <span className="font-semibold">{item.gender}</span> : {item.patientCount}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
 
-    if (error) {
-        return <div className="error-message">{error}</div>;
-    }
+                        {/* Report Card: Admissions */}
+                        <div className="bg-white p-6 rounded-lg shadow-xl border-t-4 border-indigo-500">
+                            <h3 className="text-2xl font-semibold text-gray-700 mb-4">Admissions</h3>
+                            <p className="text-lg text-gray-600 mb-2">Nombre total d'admissions : <strong className="text-indigo-600">{totalAdmissions}</strong></p>
+                            <h4 className="text-md font-medium text-gray-500 mt-4">Admissions par département :</h4>
+                            <ul className="list-disc list-inside mt-2 text-gray-600">
+                                {admissionsByDepartment.map((item, index) => (
+                                    <li key={index}>
+                                        <span className="font-semibold">{item.departmentName}</span> : {item.admissionCount}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
-        <div className="reports-container">
-            <h2>Statistiques et Rapports</h2>
-
-            <div className="report-card">
-                <h3>Patients</h3>
-                <p>Nombre total de patients : <strong>{totalPatients}</strong></p>
-                <h4>Répartition par sexe :</h4>
-                <ul>
-                    {patientGenderDistribution.map((item, index) => (
-                        <li key={index}>
-                            {item.gender} : {item.patientCount}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-
-            <div className="report-card">
-                <h3>Admissions</h3>
-                <p>Nombre total d'admissions : <strong>{totalAdmissions}</strong></p>
-                <h4>Admissions par département :</h4>
-                <ul>
-                    {admissionsByDepartment.map((item, index) => (
-                        <li key={index}>
-                            {item.departmentName} : {item.admissionCount}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        </div>
+        <ApiStateHandler
+            apiCall={fetchReports}
+            renderSuccess={renderReports}
+            loadingMessage="Chargement des statistiques..."
+            errorMessage="Impossible de charger les rapports."
+        />
     );
 };
 

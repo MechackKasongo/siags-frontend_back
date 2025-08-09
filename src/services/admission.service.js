@@ -1,32 +1,24 @@
-//mport axios from 'axios';
-
 import api from './http-common';
-import authHeader from './auth-header'; // Réutilise le même en-tête d'autorisation
-
-const API_URL = 'http://localhost:8080/api/';
 
 class AdmissionService {
     getAdmissions() {
-        // Récupère toutes les admissions
-        return api.get(API_URL + 'admissions', { headers: authHeader() });
+        return api.get('admissions'); // CORRECTED: Removed headers: authHeader() and API_URL
     }
 
     getAdmissionById(id) {
-        // Récupère une admission par son ID
-        return api.get(API_URL + `admissions/${id}`, { headers: authHeader() });
+        return api.get(`admissions/${id}`); // CORRECTED
     }
     createAdmission(admissionData) {
-        return api.post(API_URL + 'admissions', admissionData, { headers: authHeader() });
+        return api.post('admissions', admissionData); // CORRECTED
     }
 
     updateAdmission(id, admissionData) {
-        return api.put(API_URL + `admissions/${id}`, admissionData, { headers: authHeader() });
+        return api.put(`admissions/${id}`, admissionData); // CORRECTED
     }
 
     deleteAdmission(id) {
-        return api.delete(API_URL + `admissions/${id}`, { headers: authHeader() });
+        return api.delete(`admissions/${id}`); // CORRECTED
     }
-
 }
 
 export default new AdmissionService();

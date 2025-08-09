@@ -1,57 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import UserService from '../../services/user.service';
 import AuthService from '../../services/auth.service';
 import { Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import ApiStateHandler from '../../components/ApiStateHandler.jsx';
 
-const UserEditForm = () => {
-    const { id } = useParams();
+const UserCreateForm = () => {
     const navigate = useNavigate();
 
     const [userData, setUserData] = useState({
         username: '',
         email: '',
-        nomComplet: '',
         password: '',
+        nomComplet: '',
         roles: [],
-        enabled: true,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const currentUser = AuthService.getCurrentUser();
     const isAdmin = currentUser && currentUser.roles.includes('ROLE_ADMIN');
 
-    // API call function to fetch user data
-    const fetchUser = async () => {
-        if (!isAdmin) {
-            throw new Error('Unauthorized access');
-        }
-        const response = await UserService.getUserById(id);
-        const user = response.data;
-        return {
-            username: user.username,
-            email: user.email,
-            nomComplet: user.nomComplet,
-            roles: user.roles,
-            enabled: user.enabled,
-        };
-    };
-
-    // Callback to handle successful data fetch and set initial state
-    const onFetchSuccess = (data) => {
-        // FIX: Ensure roles are in the correct format for the select element
-        // The select expects values like "ROLE_ADMIN", but the API might return "ADMIN"
-        const mappedRoles = data.roles.map(role => role.startsWith('ROLE_') ? role : `ROLE_${role}`);
-        setUserData({ ...data, roles: mappedRoles });
-    };
-
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+        const { name, value } = e.target;
         setUserData({
             ...userData,
-            [name]: type === 'checkbox' ? checked : value,
+            [name]: value,
         });
     };
 
@@ -69,14 +42,13 @@ const UserEditForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-        const dataToSend = Object.fromEntries(Object.entries(userData).filter(([_, v]) => v !== '' && v !== null));
         try {
-            await UserService.updateUser(id, dataToSend);
-            toast.success('Utilisateur mis à jour avec succès !');
+            await UserService.createUser(userData);
+            toast.success('Utilisateur créé avec succès !');
             setTimeout(() => navigate('/admin/users'), 2000);
         } catch (err) {
-            console.error('Erreur lors de la mise à jour de l\'utilisateur:', err.response || err);
-            toast.error('Échec de la mise à jour de l\'utilisateur.');
+            console.error('Erreur lors de la création de l\'utilisateur:', err.response || err);
+            toast.error('Échec de la création de l\'utilisateur.');
             setIsSubmitting(false);
         }
     };
@@ -85,10 +57,10 @@ const UserEditForm = () => {
         return <Navigate to="/" />;
     }
 
-    const renderForm = () => (
+    return (
         <div className="p-8 bg-gray-50 min-h-screen flex items-center justify-center font-sans">
             <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
-                <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Modifier l'utilisateur : {userData.username}</h2>
+                <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Créer un nouvel utilisateur</h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="username" className="block text-sm font-medium text-gray-700">Nom d'utilisateur :</label>
@@ -127,13 +99,14 @@ const UserEditForm = () => {
                         />
                     </div>
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe (laisser vide pour ne pas modifier) :</label>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe :</label>
                         <input
                             type="password"
                             id="password"
                             name="password"
                             value={userData.password}
                             onChange={handleChange}
+                            required
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
                         />
                     </div>
@@ -154,38 +127,17 @@ const UserEditForm = () => {
                             <option value="ROLE_RECEPTIONNISTE">RECEPTIONNISTE</option>
                         </select>
                     </div>
-                    <div className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            id="enabled"
-                            name="enabled"
-                            checked={userData.enabled}
-                            onChange={handleChange}
-                            className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4"
-                        />
-                        <label htmlFor="enabled" className="text-sm font-medium text-gray-700">Activé</label>
-                    </div>
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                     >
-                        {isSubmitting ? 'Mise à jour en cours...' : 'Mettre à jour l\'utilisateur'}
+                        {isSubmitting ? 'Création en cours...' : 'Créer l\'utilisateur'}
                     </button>
                 </form>
             </div>
         </div>
     );
-
-    return (
-        <ApiStateHandler
-            apiCall={fetchUser}
-            renderSuccess={renderForm}
-            onSuccess={onFetchSuccess}
-            loadingMessage="Chargement du formulaire de modification..."
-            errorMessage="Impossible de charger les données de l'utilisateur."
-        />
-    );
 };
 
-export default UserEditForm;
+export default UserCreateForm;

@@ -13,6 +13,7 @@ import AdmissionForm from './pages/Admissions/AdmissionForm';
 import PatientDetails from './pages/Patients/PatientDetails';
 import DepartmentsList from './pages/Departments/DepartmentsList';
 import ConsultationsList from './pages/Consultations/ConsultationsList';
+import ConsultationForm from './pages/Consultations/ConsultationForm'; // AJOUT : Import du composant de formulaire de création
 import ReportsPage from './pages/Reports/ReportsPage';
 import AuditPage from './pages/Audits/AuditPage';
 import PatientEditForm from './pages/Patients/PatientEditForm';
@@ -24,6 +25,7 @@ import DepartmentForm from './pages/Departments/DepartmentForm';
 import DepartmentEditForm from './pages/Departments/DepartmentEditForm';
 import UserProfile from './pages/UserProfile';
 import PatientForm from './pages/Patients/PatientForm';
+import UserCreateForm from './pages/Users/UserCreateForm';
 
 // Import des icônes pour la navigation
 import {
@@ -32,7 +34,6 @@ import {
 } from 'react-icons/fa';
 
 // Composant pour protéger les routes
-// Il reçoit maintenant 'isAuthenticated' comme prop
 const PrivateRoute = ({ children, isAuthenticated }) => {
     return isAuthenticated ? children : <Navigate to="/login" />;
 };
@@ -40,33 +41,26 @@ const PrivateRoute = ({ children, isAuthenticated }) => {
 const App = () => {
     // État pour gérer l'utilisateur courant dans l'application
     const [currentUser, setCurrentUser] = useState(undefined);
-    const navigate = useNavigate(); // Pour la redirection après déconnexion
+    const navigate = useNavigate();
 
-    // Effet pour charger l'utilisateur depuis localStorage au montage du composant
     useEffect(() => {
         const user = AuthService.getCurrentUser();
         if (user) {
             setCurrentUser(user);
         }
-        console.log("App.jsx - L'utilisateur au chargement :", user); // <-- Ajoutez cette ligne
-    }, []); // S'exécute une seule fois au montage
+    }, []);
 
     const logOut = () => {
         AuthService.logout();
-        setCurrentUser(undefined); // Réinitialise l'état de l'utilisateur
+        setCurrentUser(undefined);
         toast.info("Vous avez été déconnecté.");
-        navigate('/login'); // Redirige vers la page de connexion
-        // window.location.reload(); // Évitez le rechargement complet de la page pour une SPA
+        navigate('/login');
     };
 
-    // Fonction passée au composant Login pour mettre à jour l'état de l'utilisateur
     const handleLoginSuccess = (user) => {
-        console.log("App.jsx - handleLoginSuccess est appelé avec l'utilisateur :", user); // <-- Ajoutez cette ligne
         setCurrentUser(user);
-        // La navigation vers '/dashboard' est déjà gérée dans Login.jsx
     };
 
-    // Vérifie si l'utilisateur a le rôle ADMIN
     const isAdmin = currentUser && currentUser.roles && currentUser.roles.includes('ROLE_ADMIN');
 
     return (
@@ -130,10 +124,7 @@ const App = () => {
             <main className="container mx-auto mt-6 px-4">
                 <Routes>
                     <Route path="/" element={<p className="text-center text-lg text-gray-600">Bienvenue sur SIAGS</p>} />
-                    {/* Passe la fonction handleLoginSuccess au composant Login */}
                     <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
-
-                    {/* Passe l'état d'authentification à PrivateRoute */}
                     <Route path="/dashboard" element={<PrivateRoute isAuthenticated={!!currentUser}><Dashboard /></PrivateRoute>} />
                     <Route path="/patients" element={<PrivateRoute isAuthenticated={!!currentUser}><PatientsList /></PrivateRoute>} />
                     <Route path="/patients/new" element={<PrivateRoute isAuthenticated={!!currentUser}><PatientForm /></PrivateRoute>} />
@@ -146,10 +137,12 @@ const App = () => {
                     <Route path="/departments/new" element={<PrivateRoute isAuthenticated={!!currentUser}><DepartmentForm /></PrivateRoute>} />
                     <Route path="/departments/edit/:id" element={<PrivateRoute isAuthenticated={!!currentUser}><DepartmentEditForm /></PrivateRoute>} />
                     <Route path="/consultations" element={<PrivateRoute isAuthenticated={!!currentUser}><ConsultationsList /></PrivateRoute>} />
+                    <Route path="/consultations/new" element={<PrivateRoute isAuthenticated={!!currentUser}><ConsultationForm /></PrivateRoute>} /> {/* AJOUT : Route pour le formulaire de création de consultation */}
                     <Route path="/consultations/edit/:id" element={<PrivateRoute isAuthenticated={!!currentUser}><ConsultationEditForm /></PrivateRoute>} />
                     <Route path="/reports" element={<PrivateRoute isAuthenticated={!!currentUser}><ReportsPage /></PrivateRoute>} />
                     <Route path="/audits" element={<PrivateRoute isAuthenticated={!!currentUser}><AuditPage /></PrivateRoute>} />
                     <Route path="/admin/users" element={<PrivateRoute isAuthenticated={!!currentUser}><UsersList /></PrivateRoute>} />
+                    <Route path="/admin/users/new" element={<PrivateRoute isAuthenticated={!!currentUser}><UserCreateForm /></PrivateRoute>} />
                     <Route path="/admin/users/edit/:id" element={<PrivateRoute isAuthenticated={!!currentUser}><UserEditForm /></PrivateRoute>} />
                     <Route path="/profile" element={<PrivateRoute isAuthenticated={!!currentUser}><UserProfile /></PrivateRoute>} />
                     <Route path="*" element={<h1 className="text-center text-3xl font-bold mt-10">404 - Page non trouvée</h1>} />
